@@ -79,7 +79,7 @@ class StringField(Field):
 	def __init__(self, name=None, primary_key=False, default=None, ddl='varchar(100)'):
 		super().__init__(name, ddl, primary_key, default)
 
-class Boolean(Field):
+class BooleanField(Field):
 
 	def __init__(self, name=None, default=False):
 		super().__init__(name, 'boolean', False, default)
@@ -106,8 +106,8 @@ class ModelMetaclass(type):
 		if name=='Model':
 			return type.__new__(cls, name, bases, attrs)
 
-		talbeName = attrs.get('__table__', None) or name
-		logging.info('found model: %s (table: %s)' % (name, talbeName))
+		tableName = attrs.get('__table__', None) or name
+		logging.info('found model: %s (table: %s)' % (name, tableName))
 
 		mappings = dict()
 		fields = []
@@ -117,10 +117,11 @@ class ModelMetaclass(type):
 				logging.info('	found mapping: %s ==> %s' % (k, v))
 				mappings[k] = v
 				if v.primary_key:
-					raise RuntimeError('Duplicate primary key for field: %s' % k)
-				primaryKey = k
-			else:
-				fields.append(k)
+					if primaryKey:
+						raise RuntimeError('Duplicate primary key for field: %s' % k)
+					primaryKey = k
+				else:
+					fields.append(k)
 		if not primaryKey:
 			raise RuntimeError('Primary key not found.')
 		for k in mappings.keys():
